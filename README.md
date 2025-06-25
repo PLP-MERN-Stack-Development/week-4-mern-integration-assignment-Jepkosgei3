@@ -1,79 +1,96 @@
-[![Open in Visual Studio Code](https://classroom.github.com/assets/open-in-vscode-2e0aaae1b6195c2367325f4f02e2d04e9abb55f0b24a779b69b11b9e10269abc.svg)](https://classroom.github.com/online_ide?assignment_repo_id=19838217&assignment_repo_type=AssignmentRepo)
-# MERN Stack Integration Assignment
+Task Manager Application
+Project Overview
+A full-stack MERN (MongoDB, Express.js, React.js, Node.js) application for managing tasks with user authentication using JWT tokens. Users can register, log in, create/edit/delete tasks, organize tasks by categories, and upload attachments or add comments.
+Setup Instructions
 
-This assignment focuses on building a full-stack MERN (MongoDB, Express.js, React.js, Node.js) application that demonstrates seamless integration between front-end and back-end components.
+Prerequisites:
+Node.js (v18+)
+MongoDB (local or MongoDB Atlas)
 
-## Assignment Overview
 
-You will build a blog application with the following features:
-1. RESTful API with Express.js and MongoDB
-2. React front-end with component architecture
-3. Full CRUD functionality for blog posts
-4. User authentication and authorization
-5. Advanced features like image uploads and comments
+Server Setup:
+Navigate to server/:cd server
+npm install
 
-## Project Structure
 
-```
-mern-blog/
-├── client/                 # React front-end
-│   ├── public/             # Static files
-│   ├── src/                # React source code
-│   │   ├── components/     # Reusable components
-│   │   ├── pages/          # Page components
-│   │   ├── hooks/          # Custom React hooks
-│   │   ├── services/       # API services
-│   │   ├── context/        # React context providers
-│   │   └── App.jsx         # Main application component
-│   └── package.json        # Client dependencies
-├── server/                 # Express.js back-end
-│   ├── config/             # Configuration files
-│   ├── controllers/        # Route controllers
-│   ├── models/             # Mongoose models
-│   ├── routes/             # API routes
-│   ├── middleware/         # Custom middleware
-│   ├── utils/              # Utility functions
-│   ├── server.js           # Main server file
-│   └── package.json        # Server dependencies
-└── README.md               # Project documentation
-```
+Copy server/.env.example to server/.env and set:MONGO_URI=mongodb://localhost/task-manager
+PORT=5000
+JWT_SECRET=your_jwt_secret
 
-## Getting Started
 
-1. Accept the GitHub Classroom assignment invitation
-2. Clone your personal repository that was created by GitHub Classroom
-3. Follow the setup instructions in the `Week4-Assignment.md` file
-4. Complete the tasks outlined in the assignment
+Start server:npm run dev
 
-## Files Included
 
-- `Week4-Assignment.md`: Detailed assignment instructions
-- Starter code for both client and server:
-  - Basic project structure
-  - Configuration files
-  - Sample models and components
 
-## Requirements
 
-- Node.js (v18 or higher)
-- MongoDB (local installation or Atlas account)
-- npm or yarn
-- Git
+Client Setup:
+Navigate to client/:cd client
+npm install
 
-## Submission
 
-Your work will be automatically submitted when you push to your GitHub Classroom repository. Make sure to:
+Copy client/.env.example to client/.env and set:VITE_API_URL=http://localhost:5000
 
-1. Complete both the client and server portions of the application
-2. Implement all required API endpoints
-3. Create the necessary React components and hooks
-4. Document your API and setup process in the README.md
-5. Include screenshots of your working application
 
-## Resources
+Start client:npm run dev
 
-- [MongoDB Documentation](https://docs.mongodb.com/)
-- [Express.js Documentation](https://expressjs.com/)
-- [React Documentation](https://react.dev/)
-- [Node.js Documentation](https://nodejs.org/en/docs/)
-- [Mongoose Documentation](https://mongoosejs.com/docs/) 
+
+
+
+Access:
+Open http://localhost:5173 in your browser.
+
+
+
+API Documentation
+Authentication
+
+POST /api/auth/register: Register a user
+Body: { "username": "string", "email": "string", "password": "string" }
+Response: { token, user: { id, username, email } }
+
+
+POST /api/auth/login: Login a user
+Body: { "email": "string", "password": "string" }
+Response: { token, user: { id, username, email } }
+
+
+
+Tasks
+
+GET /api/tasks: Get all tasks for authenticated user
+GET /api/tasks/:id: Get a specific task
+POST /api/tasks: Create a task
+Body: { "title": "string", "description": "string", "dueDate": "ISO date", "status": "todo|in-progress|done", "category": "categoryId" }
+
+
+PUT /api/tasks/:id: Update a task
+DELETE /api/tasks/:id: Delete a task
+POST /api/tasks/:id/attachments: Upload attachment
+Body: Form-data with file
+
+
+POST /api/tasks/:id/comments: Add comment
+Body: { "text": "string" }
+
+
+
+Categories
+
+GET /api/categories: Get all categories for authenticated user
+POST /api/categories: Create a category
+Body: { "name": "string" }
+
+
+
+Features Implemented
+
+User authentication with JWT tokens
+Task CRUD operations
+Task categorization
+File uploads for task attachments
+Task comments
+Responsive UI with Tailwind-like styling
+Error handling and input validation
+
+Screenshots
+(TODO: Add screenshots of login page, task list, task details, etc.)
