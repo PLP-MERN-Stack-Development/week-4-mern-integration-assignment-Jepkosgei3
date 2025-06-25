@@ -1,5 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 
@@ -8,7 +9,7 @@ const router = express.Router();
 router.post(
   '/register',
   [
-    body('username').notEmpty().withMessage('Username is required'),
+    body('name').notEmpty().withMessage('Name is required'),
     body('email').isEmail().withMessage('Invalid email'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   ],
@@ -16,38 +17,98 @@ router.post(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-      const { username, email, password } = req.body;
-      const user = new User({ username, email, password });
-      await user.save();
-      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-      res.status(201).json({ token, user: { id: user._id, username, email } });
-    } catch (error) {
-      if (error.code === 11000) {
-        return res.status(400).json({ message: 'Username already exists' });
+      const { name, email, password } = req.body;
+
+      // Check if user exists
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ message: 'User already exists' });
       }
-      next(error);
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create new user
+      const user = new User({
+        name,
+        email,
+        password: hashedPassword
+      });
+
+      await user.save();
+
+      // Create token
+      const token = jwt.sign(
+        { userId: user._id },
+        process.env.JWT_SECRET,
+        { expiresIn: '1d' }
+      );
+
+      res.status(201).json({
+        success: true,
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email
+        }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Server Error'
+      });
     }
   }
 );
+
 router.post(
   '/login',
-  [body('email').isEmail().withMessage('Invalid email'), body('password').notEmpty().withMessage('Password is required')],
+  [
+    body('email').isEmail().withMessage('Invalid email'),
+    body('password').notEmpty().withMessage('Password is required'),
+  ],
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
       const { email, password } = req.body;
+
+      // Check if user exists
       const user = await User.findOne({ email });
-      if (!user || !(await user.comparePassword(password))) {
-        return res.status(401).json({ message: 'Invalid credentials' });
+      if (!user) {
+        return res.status(400).json({ message: 'Invalid credentials' });
       }
-      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-      res.json({ token, user: { id: user._id, username: user.username, email } });
+
+      // Check password
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ message: 'Invalid credentials' });
+      }
+
+      // Create token
+      const token = jwt.sign(
+        { userId: user._id },
+        process.env.JWT_SECRET,
+        { expiresIn: '1d' }
+      );
+
+      res.json({
+        success: true,
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email
+        }
+      });
     } catch (error) {
-      next(error);
+      res.status(500).json({
+        success: false,
+        message: 'Server Error'
+      });
     }
   }
 );
-// ... (login route remains unchanged)
 
 module.exports = router;

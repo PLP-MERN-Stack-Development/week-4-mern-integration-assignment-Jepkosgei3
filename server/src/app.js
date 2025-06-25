@@ -1,25 +1,27 @@
-require('dotenv').config();
 const express = require('express');
+const mongoose = require('mongoose');
 const cors = require('cors');
-const helmet = require('helmet');
-const connectDB = require('./config/db');
+const dotenv = require('dotenv');
+const path = require('path');
+
+// Import routes
 const authRoutes = require('./routes/auth');
 const taskRoutes = require('./routes/tasks');
 const categoryRoutes = require('./routes/categories');
-const errorHandler = require('./middleware/error');
+
+// Load environment variables
+dotenv.config();
 
 const app = express();
-
-// Connect to MongoDB
-connectDB();
+const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors({
-  origin: 'https://zany-space-yodel-p5rgx7p5jxjf7gpg-5173.app.github.dev',
-  credentials: true,
+  origin: 'http://localhost:5173',
+  credentials: true
 }));
-app.use(helmet());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));
@@ -29,8 +31,32 @@ app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/categories', categoryRoutes);
 
-// Error handling
-app.use(errorHandler);
+// Root route
+app.get('/', (req, res) => {
+  res.json({ message: 'Task Manager API is running' });
+});
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    success: false,
+    error: err.message || 'Server Error'
+  });
+});
+
+// Connect to MongoDB and start server
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(() => {
+    console.log('Connected to MongoDB');
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Failed to connect to MongoDB:', err);
+    process.exit(1);
+  });
+
+module.exports = app;
