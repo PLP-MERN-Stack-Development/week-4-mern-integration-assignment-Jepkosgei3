@@ -10,12 +10,14 @@ const Login = () => {
   const { request, loading, error } = useApi();
   const navigate = useNavigate();
 
-  const onSubmit = async data => {
+  const onSubmit = async (data) => {
     try {
       const response = await request('post', '/auth/login', data);
       login(response.user, response.token);
       navigate('/');
-    } catch (err) {}
+    } catch (err) {
+      console.error('Login error:', err);
+    }
   };
 
   return (

@@ -6,7 +6,7 @@ const useApi = () => {
   const [error, setError] = useState(null);
 
   const request = async (method, url, data = null) => {
-    setLoading(true); // Set loading before the request
+    setLoading(true);
     try {
       const config = {
         method,
@@ -17,15 +17,15 @@ const useApi = () => {
         },
         data,
       };
-      console.log('Request URL:', config.url); // Debug
+      console.log('Request URL:', config.url);
       const response = await axios(config);
       setLoading(false);
-      setError(null); // Clear error on success
+      setError(null);
       return response.data;
     } catch (err) {
       setError(err.response?.data?.message || 'Error occurred');
       setLoading(false);
-      throw err; // Re-throw for upstream handling
+      throw err;
     }
   };
 

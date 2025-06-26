@@ -34,7 +34,6 @@ router.post(
         email,
         password: hashedPassword
       });
-
       await user.save();
 
       // Create token
@@ -54,6 +53,7 @@ router.post(
         }
       });
     } catch (error) {
+      console.error('Server Error:', error); // Log error for debugging
       res.status(500).json({
         success: false,
         message: 'Server Error'
@@ -103,6 +103,7 @@ router.post(
         }
       });
     } catch (error) {
+      console.error('Server Error:', error); // Log error for debugging
       res.status(500).json({
         success: false,
         message: 'Server Error'

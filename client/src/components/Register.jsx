@@ -10,27 +10,27 @@ const Register = () => {
   const { request, loading, error } = useApi();
   const navigate = useNavigate();
 
-  const onSubmit = async data => {
-  try {
-    const response = await request('post', '/auth/register', data);
-    login(response.user, response.token);
-    navigate('/');
-  } catch (err) {
-    console.error('Registration error:', err); // Debug
-  }
-};
+  const onSubmit = async (data) => {
+    try {
+      const response = await request('post', '/auth/register', data);
+      login(response.user, response.token);
+      navigate('/');
+    } catch (err) {
+      console.error('Registration error:', err);
+    }
+  };
 
   return (
     <div className="max-w-md mx-auto mt-8">
       <h2 className="text-2xl font-bold mb-4">Register</h2>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label className="block">Username</label>
+          <label className="block">Name</label>
           <input
-            {...register('username', { required: 'Username is required' })}
+            {...register('name', { required: 'Name is required' })}
             className="w-full p-2 border rounded"
           />
-          {errors.username && <p className="text-red-500">{errors.username.message}</p>}
+          {errors.name && <p className="text-red-500">{errors.name.message}</p>}
         </div>
         <div>
           <label className="block">Email</label>
