@@ -144,9 +144,7 @@ Sample create task body:
 {
   "title": "My Task",
   "description": "Details about the task",
-  "dueDate": "2024-12-31T00:00:00.000Z",
-  "status": "todo",
-  "category": "categoryId"
+  "status": "completed",
 }
 ```
 
