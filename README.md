@@ -196,7 +196,7 @@ Body:
 ### ➕ Create Task
 
 
-![Create Task](.images/dashboard.png)
+![Create Task](./images/dashboard.png)
 
 ---
 
