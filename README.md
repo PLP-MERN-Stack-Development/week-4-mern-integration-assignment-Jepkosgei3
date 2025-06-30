@@ -6,8 +6,6 @@ A full-stack **MERN (MongoDB, Express.js, React.js, Node.js)** task management a
 
 - Register and log in
 - Create, update, and delete tasks
-- Categorize tasks
-- Add comments and upload attachments
 - Interact via both the **web interface** and **command-line tools (like cURL or Postman)** for API calls
 
 ---
