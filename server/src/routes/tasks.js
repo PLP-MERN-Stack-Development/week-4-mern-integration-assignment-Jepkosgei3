@@ -1,101 +1,71 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const jwt = require('jsonwebtoken');
 const Task = require('../models/Task');
+require('dotenv').config();
 
-// Get all tasks
-router.get('/', auth, async (req, res) => {
-  try {
-    const tasks = await Task.find({ user: req.user.id }).sort({ createdAt: -1 });
-    res.json({ success: true, tasks });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Server Error' });
+// Middleware to verify JWT and extract user
+const authMiddleware = (req, res, next) => {
+  const token = req.headers.authorization?.split('Bearer ')[1];
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
   }
-});
 
-// Create a task
-router.post('/', auth, async (req, res) => {
   try {
-    const { title, description, dueDate, priority } = req.body;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; // Contains email
+    next();
+  } catch (err) {
+    console.error('Token verification error:', err);
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+};
+
+// Create a new task
+router.post('/', authMiddleware, async (req, res) => {
+  try {
+    console.log('Create task request body:', req.body);
+    const { title, description, status } = req.body;
+    if (!title) {
+      return res.status(400).json({ message: 'Title is required' });
+    }
+
+    // Find user by email from token
+    const User = require('../models/User');
+    const user = await User.findOne({ email: req.user.email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
     const task = new Task({
       title,
-      description,
-      dueDate,
-      priority,
-      user: req.user.id
+      description: description || '',
+      status: status || 'pending',
+      userId: user._id,
     });
 
     await task.save();
-    res.status(201).json({ success: true, task });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Server Error' });
+    res.status(201).json(task);
+  } catch (err) {
+    console.error('Create task error:', err);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Get a single task
-router.get('/:id', auth, async (req, res) => {
+// Get all tasks for the logged-in user
+router.get('/', authMiddleware, async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id);
-    if (!task) {
-      return res.status(404).json({ success: false, message: 'Task not found' });
+    const User = require('../models/User');
+    const user = await User.findOne({ email: req.user.email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    // Check if task belongs to current user
-    if (task.user.toString() !== req.user.id) {
-      return res.status(401).json({ success: false, message: 'Not authorized' });
-    }
-
-    res.json({ success: true, task });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Server Error' });
-  }
-});
-
-// Update a task
-router.put('/:id', auth, async (req, res) => {
-  try {
-    const task = await Task.findById(req.params.id);
-    if (!task) {
-      return res.status(404).json({ success: false, message: 'Task not found' });
-    }
-
-    // Check if task belongs to current user
-    if (task.user.toString() !== req.user.id) {
-      return res.status(401).json({ success: false, message: 'Not authorized' });
-    }
-
-    const { title, description, dueDate, priority, status } = req.body;
-    task.title = title || task.title;
-    task.description = description || task.description;
-    task.dueDate = dueDate || task.dueDate;
-    task.priority = priority || task.priority;
-    task.status = status || task.status;
-
-    await task.save();
-    res.json({ success: true, task });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Server Error' });
-  }
-});
-
-// Delete a task
-router.delete('/:id', auth, async (req, res) => {
-  try {
-    const task = await Task.findById(req.params.id);
-    if (!task) {
-      return res.status(404).json({ success: false, message: 'Task not found' });
-    }
-
-    // Check if task belongs to current user
-    if (task.user.toString() !== req.user.id) {
-      return res.status(401).json({ success: false, message: 'Not authorized' });
-    }
-
-    await task.remove();
-    res.json({ success: true, message: 'Task removed' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Server Error' });
+    const tasks = await Task.find({ userId: user._id });
+    res.json(tasks);
+  } catch (err) {
+    console.error('Get tasks error:', err);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

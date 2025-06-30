@@ -1,62 +1,55 @@
 const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const dotenv = require('dotenv');
 const path = require('path');
+const cors = require('cors');
+const mongoose = require('mongoose');
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT || 5001;
+
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((err) => console.error('MongoDB connection error:', err));
+
+// Middleware
+app.use(cors({
+  origin: ['http://localhost:5173', /.*\.github\.dev$/],
+  credentials: true,
+}));
+app.use(express.json());
 
 // Import routes
 const authRoutes = require('./routes/auth');
 const taskRoutes = require('./routes/tasks');
 const categoryRoutes = require('./routes/categories');
 
-// Load environment variables
-dotenv.config();
+// Verify routes
+console.log('Route types:', {
+  auth: typeof authRoutes,
+  tasks: typeof taskRoutes,
+  categories: typeof categoryRoutes,
+});
 
-const app = express();
-const PORT = process.env.PORT || 5001;
-
-// Middleware
-app.use(cors({
-  origin: 'http://localhost:5173',
-  credentials: true
-}));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Serve uploaded files
-app.use('/uploads', express.static('uploads'));
-
-// Routes
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/categories', categoryRoutes);
 
-// Root route
-app.get('/', (req, res) => {
-  res.json({ message: 'Task Manager API is running' });
+// Basic route for testing
+app.get('/api', (req, res) => {
+  res.json({ message: 'API is running' });
 });
 
-// Error handling middleware
+// Error handling
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({
-    success: false,
-    error: err.message || 'Server Error'
-  });
+  console.error('Server Error:', err.stack);
+  res.status(500).json({ error: 'Server Error' });
 });
 
-// Connect to MongoDB and start server
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log('Connected to MongoDB');
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error('Failed to connect to MongoDB:', err);
-    process.exit(1);
-  });
-
-module.exports = app;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
